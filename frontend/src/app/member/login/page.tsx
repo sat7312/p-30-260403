@@ -34,10 +34,9 @@ export default function Write() {
             })
         })
             .then(rs => {
-                alert("rs.msg");
+                alert(rs.msg);
                 router.replace(`/`)
             })
-
             .catch((errMsg) => {
                 alert(errMsg);
         })
