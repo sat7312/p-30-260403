@@ -1,11 +1,15 @@
 "use client";
 
+import { AuthContext } from "@/app/ClientLayout";
 import { fetchApi } from "@/lib/client";
 import { useRouter } from "next/navigation";
+import { use } from "react";
 
 export default function Login() {
 
     const router = useRouter();
+    const authState = use(AuthContext);
+    const getLoginMember = authState?.getLoginMember;
 
     const onSubmitHandler = (e: any) => {
         e.preventDefault();;
@@ -34,12 +38,18 @@ export default function Login() {
             })
         })
             .then(rs => {
-                alert(rs.msg);
-                router.replace(`/`)
+                if (getLoginMember !== undefined) {
+                    getLoginMember();
+                    alert(rs.msg);
+                    router.replace(`/`)
+                    return;
+                }
+
+                throw new Error("getLoingMember가 undefined입니다.");
             })
             .catch((errMsg) => {
                 alert(errMsg);
-        })
+            })
     }
 
     return (
@@ -48,7 +58,7 @@ export default function Login() {
 
             <form action="" onSubmit={onSubmitHandler} className="flex flex-col gap-4">
                 <input type="text" name="username" className="border-1 rounded p-2" placeholder="아이디를 입력해주세요" />
-                <input type="password" name="password" className="border-1 rounded p-2" placeholder="비밀번호를 입력해주세요" />
+                <input type="password" name="password" className="border-1 rounded p-2" placeholder="비밀번호를 입력해주세요." />
                 <button className="bg-blue-500 text-white p-2 rounded" type="submit">
                     로그인
                 </button>

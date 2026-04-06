@@ -1,11 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { PostCommentDto, PostDto } from "@/type/post";
 import { fetchApi } from "@/lib/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AuthContext } from "@/app/ClientLayout";
 
 export default function Detail() {
 
@@ -39,6 +40,9 @@ export default function Detail() {
                 alert("삭제가 완료되었습니다.");
                 router.replace("/posts");
             })
+            .catch((err) => {
+                alert(err);
+            })
 
     }
 
@@ -53,6 +57,8 @@ export default function Detail() {
             setPostComments(
                 postComments.filter((postComment) => postComment.id !== commentId)
             );
+        }).catch((err) => {
+            alert(err);
         });
     };
 
@@ -174,6 +180,7 @@ function PostCommentList({ postId, postComments, deletePostComment, onModifySucc
                         <PostCommentListItem
                             key={postComment.id}
                             postId={postId}
+                            authorId={postComment.id}
                             postComment={postComment}
                             deletePostComment={deletePostComment}
                             onModifySuccess={onModifySuccess}
@@ -185,14 +192,18 @@ function PostCommentList({ postId, postComments, deletePostComment, onModifySucc
     )
 }
 
-function PostCommentListItem({ postId, postComment, deletePostComment, onModifySuccess }: {
+function PostCommentListItem({ postId, authorId, postComment, deletePostComment, onModifySuccess }: {
     postId: number,
+    authorId: number,
     postComment: PostCommentDto,
     deletePostComment: (commentId: number) => void,
     onModifySuccess: (commentId: number, content: string) => void
 }) {
 
     const [modifyMode, setModifyMode] = useState(false);
+    const authState = use(AuthContext);
+    const loginedMember = authState?.loginMember;
+    const isMine = loginedMember?.id === authorId;
 
     const toggleModifyMode = () => {
         setModifyMode(!modifyMode);
@@ -218,6 +229,8 @@ function PostCommentListItem({ postId, postComment, deletePostComment, onModifyS
             //  - 단: db와 ui 상태가 일치 하지 않을 수 있음.
 
             onModifySuccess(postComment.id, contentValue);
+        }).catch((err) => {
+            alert(err);
         });
     };
 
@@ -238,17 +251,21 @@ function PostCommentListItem({ postId, postComment, deletePostComment, onModifyS
                 </form>
             )}
             {!modifyMode && <span>{postComment.content}</span>}
-            <button className="border-2 p-2 rounded" onClick={toggleModifyMode}>
-                {modifyMode ? "수정취소" : "수정"}
-            </button>
-            <button
-                className="border-2 p-2 rounded"
-                onClick={() => {
-                    deletePostComment(postComment.id);
-                }}
-            >
-                삭제
-            </button>
+            {isMine &&
+                <button className="border-2 p-2 rounded" onClick={toggleModifyMode}>
+                    {modifyMode ? "수정취소" : "수정"}
+                </button>
+            }
+            {isMine &&
+                <button
+                    className="border-2 p-2 rounded"
+                    onClick={() => {
+                        deletePostComment(postComment.id);
+                    }}
+                >
+                    삭제
+                </button>
+            }
         </li>
     )
 }
